@@ -1,0 +1,527 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Flower Surprise 🌸</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* {
+    box-sizing: border-box;
+    font-family: 'Press Start 2P', monospace !important;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    background: #26152b;
+    color: #000000;
+}
+
+.scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: url("background.jpg") center center / cover no-repeat;
+}
+
+#title {
+    position: absolute;
+    top: 8%;
+    width: 100%;
+    text-align: center;
+    color: #000000;
+    font-size: clamp(10px, 2.5vw, 18px);
+    font-weight: normal;
+    z-index: 2;
+}
+
+#photoButton {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(72vw, 300px);
+    height: min(72vw, 300px);
+    padding: 0;
+    border: 4px solid #ffd5ed;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #eceaec;
+    box-shadow: 0 0 35px #dbd4d8;
+    cursor: pointer;
+    z-index: 3;
+}
+
+#photoButton img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#photoButton.hide {
+    display: none;
+}
+
+#hint {
+    position: absolute;
+    top: 78%;
+    width: 100%;
+    text-align: center;
+    color: #000000;
+    font-size: 12px;
+    letter-spacing: 3px;
+}
+
+/* Flower photos */
+.flower {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--size);
+    height: var(--size);
+    object-fit: contain;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 10;
+    transform: translate(-50%, -50%) scale(.05) rotate(0deg);
+    will-change: transform, opacity;
+}
+
+.flower.bloom {
+    animation:
+        bloomOut var(--duration) cubic-bezier(.2, .7, .25, 1)
+        var(--delay) both;
+}
+
+@keyframes bloomOut {
+    0% {
+        opacity: 0;
+        transform:
+            translate(-50%, -50%)
+            translate(0, 0)
+            scale(.05)
+            rotate(0deg);
+    }
+
+    15% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 1;
+        transform:
+            translate(-50%, -50%)
+            translate(var(--dx), var(--dy))
+            scale(1)
+            rotate(360deg);
+    }
+}
+
+/* Flowers fall and fade */
+.flower.fall {
+    animation: flowerFall 1.2s ease-in forwards !important;
+}
+
+@keyframes flowerFall {
+    0% {
+        opacity: 1;
+        transform:
+            translate(-50%, -50%)
+            translate(var(--finalX), var(--finalY))
+            rotate(360deg)
+            scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform:
+            translate(-50%, -50%)
+            translate(
+                var(--fallX),
+                calc(var(--finalY) + 100vh)
+            )
+            rotate(540deg)
+            scale(.65);
+    }
+}
+
+.flower.fade {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.6);
+    transition: opacity .8s ease, transform .8s ease;
+}
+
+/* Envelope */
+#envelopeArea {
+    position: absolute;
+    top: 52%;
+    left: 50%;
+    width: min(300px, 85vw);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+}
+
+#envelopeArea.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.envelope {
+    position: relative;
+    width: 100%;
+    height: 190px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    perspective: 900px;
+    filter: drop-shadow(0 12px 25px #0008);
+}
+
+/* Envelope image */
+.envelopePhoto {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    z-index: 3;
+}
+
+/* Portrait letter photo */
+.paperPhoto {
+    position: fixed;
+    width: 55vw;
+    height: 80vh;
+    max-width: 90vw;
+    max-height: 85vh;
+    left: 50%;
+    top: 50%;
+    bottom: auto;
+    object-fit: contain;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -40%) scale(.8);
+    transition: opacity .5s ease, transform .5s ease;
+    z-index: 100;
+    pointer-events: none;
+}
+/* Typing text displayed ON TOP of the letter photo */
+#typedLetter {
+    position: fixed;
+    left: 50%;
+    top: -100%;
+    width: min(43vw, 330px);
+    max-width: 78vw;
+    max-height: 62vh;
+    overflow-y: auto;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    font-size: 16px;
+    line-height: 2;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -50%);
+    z-index: 101;
+    pointer-events: none;
+}
+
+.envelope.open #typedLetter {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Reveal photo when envelope is tapped */
+.envelope.open .paperPhoto {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+    z-index: 100;
+}
+
+/* Hide envelope while showing the photo */
+.envelope.open .envelopePhoto {
+    opacity: 0;
+}
+
+#envelopeHint {
+    margin-top: 24px;
+    text-align: center;
+    color: #000000;
+    font-size: 12px;
+    letter-spacing: 2px;
+}
+
+/* All text stays black */
+body,
+body * {
+    color: #000000;
+}
+</style>
+</head>
+
+<body>
+<div class="scene" id="scene">
+
+    <h1 id="title">A little surprise for you 💗</h1>
+
+    <button id="photoButton" aria-label="Tap to start">
+        <img src="mygif.gif" alt="Opening photo">
+    </button>
+
+    <div id="hint">✦ TAP THE PHOTO ✦</div>
+
+    <div id="envelopeArea">
+        <button class="envelope" id="envelope" aria-label="Open letter">
+            <img
+                class="envelopePhoto"
+                src="Letter.gif"
+                alt="Open the envelope"
+            >
+
+            <img
+                class="paperPhoto"
+                src="envelope.png"
+                alt="Your letter"
+            >
+
+            <div id="typedLetter" role="button" tabindex="0" aria-label="Read the letter">
+                Tap to read 💗
+            </div>
+        </button>
+
+        <div id="envelopeHint">✦ TAP TO OPEN ✦</div>
+    </div>
+</div>
+
+<script>
+const scene = document.getElementById("scene");
+const photoButton = document.getElementById("photoButton");
+const title = document.getElementById("title");
+const hint = document.getElementById("hint");
+const envelopeArea = document.getElementById("envelopeArea");
+const envelope = document.getElementById("envelope");
+const envelopeHint = document.getElementById("envelopeHint");
+const typedLetter = document.getElementById("typedLetter");
+
+const sentences = [
+    "Testing rani dawg",
+    "nindot ra?",
+    "rate 1-10",
+    "dipa ni ang finish product",
+];
+
+let sentenceIndex = 0;
+let typingTimer = null;
+let isTyping = false;
+
+function typeSentence(sentence) {
+    clearTimeout(typingTimer);
+
+    let charIndex = 0;
+    isTyping = true;
+    typedLetter.textContent = "";
+
+    function typeNextCharacter() {
+        if (charIndex < sentence.length) {
+            typedLetter.textContent += sentence.charAt(charIndex);
+            charIndex++;
+            typingTimer = setTimeout(typeNextCharacter, 45);
+        } else {
+            isTyping = false;
+        }
+    }
+
+    typeNextCharacter();
+}
+
+function nextSentence() {
+    if (isTyping) {
+        clearTimeout(typingTimer);
+        typedLetter.textContent = sentences[sentenceIndex];
+        isTyping = false;
+        return;
+    }
+
+    if (sentenceIndex < sentences.length - 1) {
+        sentenceIndex++;
+        typeSentence(sentences[sentenceIndex]);
+    } else {
+        typedLetter.textContent = "♡ The End ♡";
+    }
+}
+
+// Clicking anywhere outside the envelope advances the letter.
+// The envelope itself still opens and closes normally.
+scene.addEventListener("click", (event) => {
+    if (!letterOpen) return;
+    if (event.target.closest("#envelopeArea")) return;
+    nextSentence();
+});
+
+typedLetter.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        event.stopPropagation();
+        nextSentence();
+    }
+});
+let started = false;
+let letterOpen = false;
+
+function releaseFlowers() {
+    const photos = [
+        "flower1.jpg",
+        "flower2.jpg",
+        "flower3.jpg",
+        "flower4.jpg"
+    ];
+
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const CX = W / 2;
+    const CY = H / 2;
+
+    const flowers = [];
+    const fragment = document.createDocumentFragment();
+
+    const maxRadius = Math.sqrt(CX * CX + CY * CY) + 160;
+    const ringSpacing = 85;
+    const flowerSize = 135;
+
+    function createFlower(x, y, delay) {
+        const flower = document.createElement("img");
+
+        flower.className = "flower";
+        flower.src = photos[
+            Math.floor(Math.random() * photos.length)
+        ];
+        flower.alt = "";
+        flower.draggable = false;
+
+        const size = flowerSize + Math.random() * 35;
+
+        flower.style.setProperty("--size", size + "px");
+        flower.style.setProperty("--dx", x + "px");
+        flower.style.setProperty("--dy", y + "px");
+        flower.style.setProperty("--duration", "2.8s");
+        flower.style.setProperty("--delay", delay + "s");
+        flower.style.setProperty("--finalX", x + "px");
+        flower.style.setProperty("--finalY", y + "px");
+
+        flower.style.setProperty(
+            "--fallX",
+            (x + Math.random() * 180 - 90) + "px"
+        );
+
+        fragment.appendChild(flower);
+        flowers.push(flower);
+    }
+
+    createFlower(0, 0, 0);
+
+    let ringIndex = 1;
+
+    for (
+        let radius = ringSpacing;
+        radius <= maxRadius;
+        radius += ringSpacing
+    ) {
+        const count = Math.max(
+            6,
+            Math.ceil((2 * Math.PI * radius) / 90)
+        );
+
+        const delay = ringIndex * 0.22;
+
+        for (let i = 0; i < count; i++) {
+            const angle =
+                (2 * Math.PI * i / count) +
+                (ringIndex % 2) * (Math.PI / count);
+
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+
+            createFlower(x, y, delay);
+        }
+
+        ringIndex++;
+    }
+
+    scene.appendChild(fragment);
+    title.textContent = "Watch the flowers bloom... 🌸";
+
+    requestAnimationFrame(() => {
+        flowers.forEach(flower => {
+            flower.classList.add("bloom");
+        });
+    });
+
+    const bloomTime = (ringIndex - 1) * 220 + 2800;
+
+    setTimeout(() => {
+        title.textContent = "A little letter for you 💌";
+        envelopeArea.classList.add("show");
+
+        flowers.forEach(flower => {
+            flower.classList.remove("bloom");
+            flower.classList.add("fall");
+        });
+
+        setTimeout(() => {
+            flowers.forEach(flower => flower.remove());
+        }, 1250);
+
+    }, bloomTime + 100);
+}
+
+photoButton.addEventListener("click", () => {
+    if (started) return;
+    started = true;
+
+    photoButton.classList.add("hide");
+    hint.style.opacity = "0";
+
+    releaseFlowers();
+});
+
+envelope.addEventListener("click", () => {
+    letterOpen = !letterOpen;
+    envelope.classList.toggle("open", letterOpen);
+
+    title.textContent = letterOpen
+        ? "A message from my heart 💗"
+        : "A little letter for you 💌";
+
+    envelopeHint.textContent = letterOpen
+        ? "✦ TAP THE LETTER TO CONTINUE ✦"
+        : "✦ TAP TO OPEN ✦";
+
+    if (letterOpen) {
+        sentenceIndex = 0;
+        typeSentence(sentences[sentenceIndex]);
+    } else {
+        clearTimeout(typingTimer);
+        isTyping = false;
+        typedLetter.textContent = "Tap to read 💗";
+    }
+});
+</script>
+</body>
+</html>
